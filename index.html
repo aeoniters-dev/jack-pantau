@@ -7,129 +7,217 @@
 <title>Jack Pantau</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
 <style>
-:root{--bg:#071016;--card:#0c1820;--line:#16303d;--c:#35d7ff;--g:#39ff88;--a:#ffb547;--r:#ff6b7a;--t:#d7e6ee;--dim:#7d96a4}
-*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--t);font:14px/1.45 ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace}
-header{position:sticky;top:0;z-index:5;background:rgba(7,16,22,.96);border-bottom:1px solid var(--line);padding:12px 16px calc(10px);display:flex;align-items:center;gap:10px}
-header h1{font-size:15px;letter-spacing:2px;margin:0;color:var(--c);flex:1}
-button{font:inherit;color:var(--t);background:transparent;border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-height:40px}
+:root{--bg:#071016;--card:#0c1820;--line:#16303d;--c:#35d7ff;--g:#39ff88;--a:#ffb547;--r:#ff6b7a;--t:#d7e6ee;--dim:#7d96a4;--dd:#56707f}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--t);font:13px/1.45 ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace}
+header{position:sticky;top:0;z-index:5;background:rgba(7,16,22,.97);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;align-items:center;gap:8px}
+header h1{font-size:14px;letter-spacing:2px;margin:0;color:var(--c);flex:1}
+button{font:inherit;color:var(--t);background:transparent;border:1px solid var(--line);border-radius:8px;padding:6px 10px;min-height:38px}
 button:active{background:#10222c}
-main{padding:12px 16px 40px;max-width:640px;margin:0 auto}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
-.h{font-size:11px;letter-spacing:2px;color:var(--dim);margin:18px 2px 8px}
-.row{display:flex;justify-content:space-between;gap:8px;padding:3px 0}
+main{padding:10px 12px 40px;max-width:720px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+.h{font-size:11px;letter-spacing:2px;color:var(--c);margin:16px 2px 8px;display:flex;justify-content:space-between;gap:8px}
+.row{display:flex;justify-content:space-between;gap:8px;padding:2px 0}
 .big{font-size:26px;font-weight:700}
-.lamp{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
-.g{color:var(--g)}.a{color:var(--a)}.r{color:var(--r)}.c{color:var(--c)}.dim{color:var(--dim)}
-.k{cursor:pointer}.k .top{display:flex;align-items:center;gap:8px}.k .nm{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-top:8px;font-size:13px}
-.det{margin-top:10px;border-top:1px solid var(--line);padding-top:8px;font-size:12px}
-.det .it{padding:5px 0;border-bottom:1px dashed #12262f}
+.lamp{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.g{color:var(--g)}.a{color:var(--a)}.r{color:var(--r)}.c{color:var(--c)}.dim{color:var(--dim)}.dd{color:var(--dd)}
+.eag{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ea{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px;font-size:12px;display:flex;flex-direction:column;gap:2px}
+.tag{align-self:flex-start;padding:1px 7px;border:1px solid;border-radius:5px;font-weight:700;font-size:13px}
+.it{padding:6px 0;border-bottom:1px dashed #12262f}
 .st{font-weight:700;font-size:11px;margin-right:6px}
 input{font:inherit;width:100%;padding:12px;border-radius:8px;border:1px solid var(--line);background:#06121a;color:var(--t);margin:6px 0 12px}
-.msg{min-height:20px;font-size:12px}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:20;overflow:auto;padding:16px 10px}
+.ov .card{max-width:720px;margin:0 auto}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.tabs button{padding:4px 8px;min-height:34px;font-size:11px}
+.on{border-color:var(--c)!important;color:var(--c)}
+.tr{padding:7px 0;border-bottom:1px solid #12262f}
+.sub{background:#0f1a22;padding:5px 6px;margin:2px -6px;border-radius:4px}
 .foot{font-size:11px;color:var(--dim);text-align:center;margin-top:16px}
+.btn-a{border-color:var(--a);color:var(--a)}.btn-r{border-color:var(--r);color:var(--r)}
 </style>
 </head>
 <body>
 <header><h1>JACK PANTAU</h1><span id="umur" class="dim" style="font-size:11px"></span><button id="bRef" type="button" aria-label="Muat semula">⟳</button><button id="bOut" type="button" aria-label="Log keluar" hidden>⎋</button></header>
 <main id="app"></main>
+<div id="ov"></div>
 <script>
-const URL_SB = "https://zggyxogijbthjmxulavv.supabase.co", KEY = "sb_publishable_lewTn_a8rhi6GYqhonkFpw_GizqeaNO", AKAUN_SAYA = 1100569266, SEGAR_S = 60;
+const URL_SB = "https://zggyxogijbthjmxulavv.supabase.co", KEY = "sb_publishable_lewTn_a8rhi6GYqhonkFpw_GizqeaNO", SEGAR_S = 30;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ls = { get(k){ try { return localStorage.getItem(k); } catch(e) { return null; } }, set(k,v){ try { localStorage.setItem(k,v); } catch(e){} }, del(k){ try { localStorage.removeItem(k); } catch(e){} } };
-let TOKEN = ls.get('jp_token'), timer = null, buka = new Set(), data = null, tAmbil = 0;
+let TOKEN = ls.get('jp_token'), timer = null, buka = new Set(), P = null, K = null, PR = {}, tAmbil = 0, plTab = null, ralatP = null;
 async function rpc(nama, body) {
   const r = await fetch(URL_SB + '/rest/v1/rpc/' + nama, { method: 'POST', headers: { apikey: KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  if (!r.ok) throw new Error('HTTP ' + r.status);
+  if (!r.ok) { const e = new Error('HTTP ' + r.status); e.code = r.status; throw e; }
   return r.json();
 }
+const f2 = v => v == null || v === '' ? '-' : Number(v).toFixed(2);
+const sg = v => v == null ? '-' : (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(Number(v)).toFixed(2);
+const sp = v => v == null ? '' : ' (' + (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(Number(v)).toFixed(1) + 'p)';
+const kc = v => v == null ? '' : v < 0 ? 'r' : v > 0 ? 'g' : '';
+const ago = m => m == null ? 'tiada laporan' : m < 1 ? 'baru' : m < 60 ? Math.round(m) + ' min lalu' : m < 1440 ? Math.round(m / 60) + ' jam lalu' : Math.round(m / 1440) + ' hari lalu';
+const LC = { OK: 'g', AMARAN: 'a', GAGAL: 'r', INFO: 'c' };
+
+// ---------- LOG MASUK ----------
 function loginView(msg) {
   $('#bOut').hidden = true; $('#bRef').hidden = true; $('#umur').textContent = '';
   $('#app').innerHTML = '<div class="card" style="margin-top:30px"><div class="c" style="letter-spacing:2px;margin-bottom:10px">LOG MASUK ADMIN</div>' +
     '<label class="dim" for="u">ID / emel</label><input id="u" autocomplete="username" value="' + esc(ls.get('jp_user') || '') + '">' +
     '<label class="dim" for="p">Kata laluan</label><div style="position:relative"><input id="p" type="password" autocomplete="current-password" style="padding-right:52px"><button id="eye" type="button" aria-label="Tunjuk kata laluan" style="position:absolute;right:4px;top:8px;border:0">👁</button></div>' +
-    '<button id="go" type="button" style="width:100%;border-color:var(--c);color:var(--c)">MASUK</button><div class="msg r" id="lm" style="margin-top:8px">' + esc(msg || '') + '</div></div>';
+    '<button id="go" type="button" style="width:100%;border-color:var(--c);color:var(--c)">MASUK</button><div class="r" id="lm" style="margin-top:8px;min-height:18px">' + esc(msg || '') + '</div></div>';
   $('#eye').onclick = () => { const p = $('#p'); p.type = p.type === 'password' ? 'text' : 'password'; };
   const go = async () => {
-    $('#lm').textContent = 'menyemak...'; $('#lm').className = 'msg dim';
+    $('#lm').textContent = 'menyemak...'; $('#lm').className = 'dim';
     try {
       const r = await rpc('log_masuk', { p_login: $('#u').value.trim(), p_kata: $('#p').value, p_peranti: 'Jack Pantau (telefon)' });
       if (!r || !r.ok) throw new Error((r && r.msg) || 'gagal');
       if (r.ahli && r.ahli.peranan !== 'ADMIN') throw new Error('Bukan akaun ADMIN');
       TOKEN = r.token; ls.set('jp_token', TOKEN); ls.set('jp_user', $('#u').value.trim()); muat();
-    } catch (e) { $('#lm').textContent = e.message; $('#lm').className = 'msg r'; }
+    } catch (e) { $('#lm').textContent = e.message; $('#lm').className = 'r'; }
   };
   $('#go').onclick = go; $('#p').onkeydown = e => { if (e.key === 'Enter') go(); };
 }
-const f2 = v => v == null || v === '' ? '-' : Number(v).toFixed(2);
-const sg = v => v == null ? '-' : (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(Number(v)).toFixed(2);
-const kc = v => v == null ? '' : v < 0 ? 'r' : v > 0 ? 'g' : '';
-const ago = m => m == null ? 'tiada laporan' : m < 1 ? 'baru' : m < 60 ? Math.round(m) + ' min lalu' : m < 1440 ? Math.round(m / 60) + ' jam lalu' : Math.round(m / 1440) + ' hari lalu';
-const LC = { OK: 'g', AMARAN: 'a', GAGAL: 'r', INFO: 'c' };
-function siap(r) {
-  const now = r.masa_server ? new Date(r.masa_server).getTime() : Date.now();
-  return (r.klien || []).map(x => {
-    const umur = x.masa ? (now - new Date(x.masa).getTime()) / 60000 : null, rg = x.ringkas || {};
-    x._umur = umur; x._on = umur != null && umur <= 10 ? 'ON' : umur != null && umur <= 30 ? 'LEWAT' : 'OFF';
-    x._g = rg.GAGAL || 0; x._a = rg.AMARAN || 0; return x;
+
+// ---------- 1. AKAUN ----------
+function akaunHtml() {
+  if (ralatP) return '<div class="card a">' + esc(ralatP) + '</div>';
+  if (!P || !P.data) return '<div class="card dim">Tiada data Command Center lagi. Buka app PC (log masuk ADMIN) — data dihantar setiap 60 s.</div>';
+  const d = P.data, a = d.akaun || {}, m = a.minggu || {}, umur = P.masa ? (new Date(P.masa_server || Date.now()) - new Date(P.masa)) / 60000 : null;
+  const lewat = umur == null || umur > 3;
+  return '<div class="card" id="akaun" role="button" tabindex="0" style="cursor:pointer">' +
+    '<div class="row"><span class="c" style="letter-spacing:2px;font-weight:700">AKAUN</span><span class="dim" style="font-size:11px;text-align:right">' + esc(a.login || '') + ' · ' + esc(a.hari || '') + '</span></div>' +
+    '<div class="big" style="margin:4px 0">' + f2(a.balance) + ' <span style="font-size:14px">' + esc(a.mata || 'USD') + '</span></div>' +
+    '<div class="row"><span class="dim">EQUITY</span><span>' + f2(a.equity) + '</span></div>' +
+    '<div class="row"><span class="dim">P/L HARI INI</span><span class="' + kc(a.pl_hari) + '" style="font-weight:700">' + sg(a.pl_hari) + '</span></div>' +
+    '<div class="row"><span class="dim">MODAL AWAL HARI</span><span>' + f2(a.modal_awal) + '</span></div>' +
+    '<div class="row"><span class="dim">MINGGU UNTUNG' + (m.mula ? ' (mula ' + esc(m.mula) + ')' : '') + '</span><span>' + (m.untung ?? '-') + ' / ' + (m.ada ?? '-') + ' minggu</span></div>' +
+    '<div class="row" style="font-size:11px;margin-top:4px"><span class="' + (lewat ? 'a' : 'dd') + '">data PC: ' + ago(umur) + (lewat ? ' ⚠ app PC tak hantar?' : '') + '</span><span class="c">tekan: senarai trade ▸</span></div></div>';
+}
+// ---------- 2. P/L AKAUN (popup 5 tab) ----------
+const TAB = [['h', 'HARI INI'], ['s', 'SEMALAM'], ['m', 'MINGGU INI'], ['ml', 'MINGGU LALU'], ['b', 'BULAN INI']];
+function plPanel(tab) {
+  plTab = tab; const d = (P && P.data) || {}, L = (d.trade || {})[tab] || [], multi = ['m', 'ml', 'b'].includes(tab);
+  const lbl = d.label || {}, sub = { h: (d.akaun || {}).hari || '', s: lbl.s || '', m: 'mula ' + (lbl.m || 'Isnin'), ml: lbl.ml || '', b: lbl.b || '' }[tab];
+  let rows = '', cur = null, acc = null; const hari = [];
+  const tutupHari = () => { if (acc) { rows += '<div class="sub row"><span class="dim">jumlah ' + esc(cur) + '</span><span><span class="' + kc(acc.pips) + '">' + (acc.pips > 0 ? '+' : '') + acc.pips.toFixed(1) + 'p</span> &nbsp;<b class="' + kc(acc.pl) + '">' + sg(acc.pl) + '</b></span></div>'; hari.push(acc); } };
+  L.forEach(r => {
+    const [hr, tin, tout, ea, arah, lot, en, tu, pips, pl, sebab] = r;
+    if (multi && hr !== cur) { tutupHari(); cur = hr; acc = { pl: 0, pips: 0 }; }
+    if (acc) { acc.pl += pl || 0; acc.pips += pips || 0; }
+    rows += '<div class="tr"><div class="row"><span>' + (multi ? esc(hr) + ' · ' : '') + esc(tin || '-') + '→' + esc(tout) + ' <b>' + esc(ea || '-') + '</b> <span class="' + (arah === 'BUY' ? 'g' : 'r') + '">' + esc(arah) + '</span></span><b class="' + kc(pl) + '">' + sg(pl) + '</b></div>' +
+      '<div class="row dim" style="font-size:11px"><span>' + (lot != null ? lot.toFixed(2) : '') + ' · ' + (en != null ? en.toFixed(2) : '-') + ' → ' + (tu != null ? tu.toFixed(2) : '-') + '</span><span><span class="' + kc(pips) + '">' + (pips == null ? '' : (pips > 0 ? '+' : '') + pips.toFixed(1) + 'p') + '</span> · ' + esc(sebab || '') + '</span></div></div>';
   });
+  tutupHari();
+  if (!L.length) rows = '<div class="dim" style="padding:10px 0">Tiada trade tutup.</div>';
+  const M = L.filter(r => r[9] > 0).length, Kk = L.filter(r => r[9] < 0).length, pj = L.reduce((s, r) => s + (r[8] || 0), 0);
+  const tot = (d.jumlah || {})[tab] != null ? d.jumlah[tab] : L.reduce((s, r) => s + (r[9] || 0), 0), baki = (d.baki || {})[tab] || 0;
+  $('#ov').innerHTML = '<div class="ov" id="ovbg"><div class="card"><div class="row"><b class="c" style="letter-spacing:2px">P/L AKAUN · ' + esc(TAB.find(t => t[0] === tab)[1]) + '</b><button id="ovx" type="button" aria-label="Tutup">✕</button></div>' +
+    '<div class="tabs">' + TAB.map(([k, t]) => '<button type="button" data-t="' + k + '" class="' + (k === tab ? 'on' : '') + '">' + t + '</button>').join('') + '</div>' +
+    '<div class="dim" style="font-size:11px;margin-bottom:6px">' + esc(sub) + '</div>' + rows +
+    '<div class="row" style="margin-top:10px;font-weight:700"><span>JUMLAH · ' + L.length + ' trade · ' + M + 'M/' + Kk + 'K' + (L.length ? ' · WR ' + Math.round(M / L.length * 100) + '%' : '') + ' · ' + (pj > 0 ? '+' : '') + pj.toFixed(1) + 'p' +
+    (multi && hari.length ? ' · hari untung ' + hari.filter(h => h.pl > 0).length + '/' + hari.length : '') + '</span><span class="' + kc(tot) + '">' + sg(tot) + '</span></div>' +
+    (Math.abs(baki) >= 0.005 ? '<div class="dim" style="font-size:11px">termasuk komisen / swap posisi terbuka: ' + sg(baki) + '</div>' : '') + '</div></div>';
+  $('#ovx').onclick = tutupOv; $('#ovbg').onclick = e => { if (e.target.id === 'ovbg') tutupOv(); };
+  document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => plPanel(b.dataset.t));
 }
-function lampu(on) { return '<span class="lamp" style="background:var(--' + ({ ON: 'g', LEWAT: 'a', OFF: 'r' }[on]) + ')"></span>'; }
-function detail(x) {
-  const R = x.rows || [], pr = R.filter(y => /^PRESTASI /.test(y.nama)), sis = R.filter(y => !/^PRESTASI /.test(y.nama));
-  const bad = sis.filter(y => y.st === 'GAGAL' || y.st === 'AMARAN'), ok = sis.filter(y => y.st !== 'GAGAL' && y.st !== 'AMARAN');
-  const it = y => '<div class="it"><span class="st ' + (LC[y.st] || '') + '">' + esc(y.st) + '</span>' + esc(y.nama) + ': ' + esc(y.nilai) + (y.nota ? '<div class="dim">' + esc(y.nota) + '</div>' : '') + '</div>';
-  return '<div class="det">' + (pr.length ? '<div class="c" style="margin-bottom:4px">PRESTASI EA</div>' + pr.map(y => '<div class="it"><b>' + esc(y.nama.replace('PRESTASI ', '')) + '</b><div>' + esc(y.nilai) + '</div><div class="dim">' + esc(y.nota || '') + '</div></div>').join('') : '') +
-    (bad.length ? '<div class="a" style="margin:8px 0 4px">PERLU PERHATIAN</div>' + bad.map(it).join('') : '') +
-    '<div class="dim" style="margin:8px 0 4px">SEMAK SISTEM</div>' + ok.map(it).join('') + '</div>';
+function tutupOv() { $('#ov').innerHTML = ''; plTab = null; }
+// ---------- 3. EXPERT ADVISORS ----------
+function eaHtml() {
+  const d = (P && P.data) || {}, E = d.ea || [];
+  if (!E.length) return '';
+  const n = E.filter(e => e.posisi > 0).length;
+  return '<div class="h"><span>EXPERT ADVISORS</span><span class="dim">' + n + ' / ' + E.length + ' ada posisi</span></div><div class="eag">' + E.map(e => {
+    const slot = e.used == null ? null : e.mx != null ? e.baki > 0 : e.st !== 'END', run = slot === false && e.posisi > 0;
+    const sc = slot == null ? 'var(--t)' : slot ? 'var(--g)' : run ? 'var(--a)' : 'var(--r)';
+    const st = e.posisi > 0 ? '<span class="c">● IN TRADE · ' + e.posisi + ' · ' + sg(e.floating) + sp(e.fpips) + '</span>'
+      : e.st === 'WAIT' ? '<span class="g" style="font-weight:700">○ WAITING SETUP</span>' + (e.why ? '<span class="dim"> · ' + esc(e.why) + '</span>' : '')
+      : e.st === 'END' ? '<span class="dd">■ END' + (e.why ? ' · ' + esc(e.why) : '') + '</span>' : '<span class="dd">○ tiada posisi</span>';
+    const jb = e.magic === 202610 && d.jbo ? (d.jbo.auto === false ? '<span class="r" style="font-weight:700">⚠ AUTO OFF</span>' : d.jbo.auto ? '<span class="g">AUTO ON · lot ' + (d.jbo.lot != null ? (+d.jbo.lot).toFixed(2) : '?') + '</span>' : '') : '';
+    return '<div class="ea"><span class="tag" style="border-color:' + sc + ';color:' + sc + '">' + esc(e.nama) + '</span><span class="dd" style="font-size:10px">' + esc(e.ver || '?') + ' · ' + esc(e.tf || '?') + ' · #' + e.magic + '</span>' +
+      '<div class="row"><span class="dim">P/L</span><span class="' + kc(e.pl) + '">' + sg(e.pl) + '</span></div>' + (e.tutup ? '<div class="row dd" style="font-size:10px;justify-content:flex-end">' + sp(e.pips) + '</div>' : '') +
+      '<div class="row"><span class="dim">TUTUP</span><span>' + (e.tutup ?? 0) + '</span></div>' +
+      (e.used != null ? '<div class="row"><span class="dim">SLOT</span><span class="' + (e.mx == null ? 'dim' : e.baki > 0 ? 'g' : 'r') + '">' + (e.mx == null ? e.used + ' · tiada had' : e.used + '/' + e.mx + ' · ' + (e.baki > 0 ? 'baki ' + e.baki : 'PENUH')) + '</span></div>' : '') +
+      (jb ? '<div style="font-size:11px">' + jb + '</div>' : '') + '<div style="font-size:11px">' + st + '</div></div>';
+  }).join('') + '</div>';
 }
-function kad(x, saya) {
-  const d = x.duit || {}, op = buka.has(x.id);
-  return '<div class="card k" data-i="' + esc(x.id) + '" role="button" tabindex="0" aria-expanded="' + op + '">' +
-    '<div class="top">' + lampu(x._on) + '<span class="nm">' + esc(saya ? 'AKAUN SAYA · ' + (x.akaun || '') : (x.nama || x.id)) + '</span><span class="dim" style="font-size:11px">' + esc(x.id) + '</span></div>' +
-    (saya ? '<div class="row" style="margin-top:8px;align-items:baseline"><span class="dim">P/L hari ini</span><span class="big ' + kc(d.pl_hari) + '">' + sg(d.pl_hari) + '</span></div>' : '') +
-    '<div class="grid"><span class="dim">Balance</span><span>' + f2(d.balance) + '</span><span class="dim">Equity</span><span>' + f2(d.equity) + '</span>' +
-    (saya ? '' : '<span class="dim">P/L hari ini</span><span class="' + kc(d.pl_hari) + '">' + sg(d.pl_hari) + '</span>') +
-    '<span class="dim">Posisi</span><span>' + (d.posisi ?? '-') + '</span>' +
-    '<span class="dim">Laporan</span><span class="' + (x._on === 'ON' ? 'g' : x._on === 'LEWAT' ? 'a' : 'r') + '">' + ago(x._umur) + '</span>' +
-    '<span class="dim">Semak</span><span><span class="g">' + ((x.ringkas || {}).OK || 0) + '</span> / <span class="a">' + x._a + '</span> / <span class="r">' + x._g + '</span></span>' +
-    (saya ? '' : '<span class="dim">Akaun</span><span>' + esc(x.akaun || '-') + '</span>') + '<span class="dim">Versi</span><span>' + esc(x.versi || '-') + '</span></div>' +
-    (op ? detail(x) : '<div class="dim" style="font-size:11px;margin-top:6px">tekan untuk butiran ▾</div>') + '</div>';
+// ---------- 4. POSISI TERBUKA ----------
+function posHtml() {
+  const L = ((P && P.data) || {}).posisi || [];
+  const jum = L.reduce((s, p) => s + (p.pl || 0), 0), jp = L.reduce((s, p) => s + (p.pips || 0), 0);
+  const jarak = (p, x) => !x || !p.pip ? '' : '<span class="dd" style="font-size:10px"> ' + (Math.abs(x - p.open) / p.pip).toFixed(1) + 'p</span>';
+  return '<div class="h"><span>POSISI TERBUKA</span><span class="dim">' + L.length + '</span></div><div class="card">' +
+    (L.length ? L.map(p => '<div class="tr"><div class="row"><span><b>' + esc(p.ea) + '</b> · ' + esc(String(p.simbol || '').split('.')[0]) + ' <span class="' + (p.arah === 'BUY' ? 'g' : 'r') + '">' + esc(p.arah) + '</span> ' + (p.lot != null ? p.lot.toFixed(2) : '') + '</span><b class="' + kc(p.pl) + '">' + sg(p.pl) + '</b></div>' +
+      '<div class="row dim" style="font-size:11px"><span>open ' + esc(p.open) + ' · SL ' + esc(p.sl) + jarak(p, p.sl) + ' · TP ' + esc(p.tp) + jarak(p, p.tp) + '</span><span class="' + kc(p.pips) + '">' + (p.pips == null ? '' : (p.pips > 0 ? '+' : '') + p.pips.toFixed(1) + 'p') + '</span></div></div>').join('') +
+      '<div class="row" style="margin-top:8px;font-weight:700"><span class="c">JUMLAH · ' + L.length + ' posisi</span><span class="' + kc(jum) + '">' + sg(jum) + sp(jp) + '</span></div>'
+      : '<div class="dim">Tiada posisi terbuka</div>') + '</div>';
 }
+// ---------- 5. KESIHATAN CLIENT (+ TUTUP PC) ----------
+function kesHtml() {
+  if (!K) return '';
+  const now = K.masa_server ? new Date(K.masa_server).getTime() : Date.now();
+  const L = (K.klien || []).map(x => { const u = x.masa ? (now - new Date(x.masa).getTime()) / 60000 : null; x._u = u; x._on = u != null && u <= 10 ? 'ON' : u != null && u <= 30 ? 'LEWAT' : 'OFF'; return x; });
+  const n = k => L.filter(x => x._on === k).length, ng = L.filter(x => (x.ringkas || {}).GAGAL).length;
+  return '<div class="h"><span>KESIHATAN CLIENT</span><span class="dim">' + L.length + ' · <span class="g">' + n('ON') + '</span>/<span class="a">' + n('LEWAT') + '</span>/<span class="r">' + n('OFF') + '</span>' + (ng ? ' · <span class="r">' + ng + ' GAGAL</span>' : '') + '</span></div>' +
+    L.map(x => {
+      const d = x.duit || {}, rg = x.ringkas || {}, op = buka.has(x.id), R = (x.rows || []).filter(y => !/^PRESTASI /.test(y.nama));
+      const bad = R.filter(y => y.st === 'GAGAL' || y.st === 'AMARAN'), pr = PR[x.id];
+      const oc = { ON: 'g', LEWAT: 'a', OFF: 'r' }[x._on];
+      return '<div class="card"><div class="k row" data-i="' + esc(x.id) + '" role="button" tabindex="0" style="cursor:pointer"><span><span class="lamp" style="background:var(--' + oc + ')"></span><b>' + esc(x.nama || x.id) + '</b> <span class="dd">' + esc(x.id) + '</span></span><span class="' + oc + '" style="font-size:11px">' + ago(x._u) + '</span></div>' +
+        '<div class="row" style="font-size:12px"><span class="dim">' + esc(x.versi || '-') + ' · ' + esc(String(x.akaun || '-')) + '</span><span><span class="g">' + (rg.OK || 0) + '</span>/<span class="a">' + (rg.AMARAN || 0) + '</span>/<span class="r">' + (rg.GAGAL || 0) + '</span></span></div>' +
+        '<div class="row" style="font-size:12px"><span>bal ' + f2(d.balance) + ' · eq ' + f2(d.equity) + '</span><span>P/L <b class="' + kc(d.pl_hari) + '">' + sg(d.pl_hari) + '</b> · pos ' + (d.posisi ?? '-') + '</span></div>' +
+        (!op && bad.length ? '<div style="font-size:11px;margin-top:4px">' + bad.map(y => '<div><span class="' + LC[y.st] + '">■</span> ' + esc(y.nama) + ': ' + esc(y.nilai) + '</div>').join('') + '</div>' : '') +
+        (op ? '<div style="font-size:11px;margin-top:6px;border-top:1px solid var(--line);padding-top:6px">' + R.map(y => '<div class="it"><span class="st ' + (LC[y.st] || '') + '">' + esc(y.st) + '</span>' + esc(y.nama) + ': ' + esc(y.nilai) + (y.nota ? '<div class="dim">' + esc(y.nota) + '</div>' : '') + '</div>').join('') + '</div>' : '') +
+        '<div class="row" style="margin-top:8px;align-items:center"><span style="font-size:10px" class="' + (pr ? ({ SIAP: 'g', GAGAL: 'r' }[pr.status] || 'a') : 'dd') + '">' + (pr ? '#' + pr.id + ' ' + esc(pr.status) + (pr.nota ? ' · ' + esc(pr.nota) : '') : '') + '</span>' +
+        '<span style="white-space:nowrap"><button type="button" class="btn-a pc" data-i="' + esc(x.id) + '" data-n="' + esc(x.nama || x.id) + '">TUTUP PC</button> <button type="button" class="btn-r pc" data-p="1" data-i="' + esc(x.id) + '" data-n="' + esc(x.nama || x.id) + '">PAKSA</button></span></div></div>';
+    }).join('');
+}
+function sah(tajuk, isi, ok) {
+  $('#ov').innerHTML = '<div class="ov" id="ovbg"><div class="card" style="max-width:420px;margin-top:20vh"><b class="a">' + esc(tajuk) + '</b><div style="margin:10px 0;line-height:1.6">' + isi + '</div>' +
+    '<div class="row"><button id="tidak" type="button">BATAL</button><button id="ya" type="button" class="btn-r">YA, HANTAR</button></div></div></div>';
+  $('#tidak').onclick = tutupOv; $('#ya').onclick = () => { tutupOv(); ok(); };
+}
+async function hantarTutup(id, nama, paksa) {
+  try {
+    const q = await rpc('perintah_hantar', { p_token: TOKEN, p_id: String(id), p_jenis: paksa ? 'TUTUP_PC_PAKSA' : 'TUTUP_PC' });
+    if (!q || !q.ok) throw new Error((q && q.msg) || 'gagal');
+    PR[id] = { id: q.id || '?', status: 'BARU', nota: 'dihantar · app PC ambil dalam ~1 min' }; lukis();
+  } catch (e) { alert0('Gagal hantar: ' + e.message); }
+}
+function alert0(m) { $('#ov').innerHTML = '<div class="ov" id="ovbg"><div class="card" style="max-width:420px;margin-top:20vh"><div class="r">' + esc(m) + '</div><button id="tidak" type="button" style="margin-top:10px">OK</button></div></div>'; $('#tidak').onclick = tutupOv; }
+
+// ---------- LUKIS & MUAT ----------
 function lukis() {
-  if (!data) return;
-  const K = siap(data), saya = K.find(x => Number(x.akaun) === AKAUN_SAYA), lain = K.filter(x => x !== saya);
-  const n = k => lain.filter(x => x._on === k).length;
-  $('#app').innerHTML = (saya ? kad(saya, true) : '<div class="card dim">Akaun ' + AKAUN_SAYA + ' tiada laporan.</div>') +
-    '<div class="h">CLIENT · ' + lain.length + ' · <span class="g">' + n('ON') + ' online</span> · <span class="a">' + n('LEWAT') + ' lewat</span> · <span class="r">' + n('OFF') + ' offline</span></div>' +
-    lain.map(x => kad(x, false)).join('') +
-    '<div class="foot">Data dari laporan app PC (setiap 5 min) · auto muat semula ' + SEGAR_S + ' s · pantau sahaja</div>';
-  document.querySelectorAll('.k').forEach(el => {
-    const t = () => { const i = el.dataset.i; buka.has(i) ? buka.delete(i) : buka.add(i); lukis(); };
-    el.onclick = t; el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); t(); } };
+  $('#app').innerHTML = akaunHtml() + eaHtml() + posHtml() + kesHtml() + '<div class="foot">Pantau sahaja · data PC setiap 60 s · client setiap 5 min · auto muat ' + SEGAR_S + ' s</div>';
+  const a = $('#akaun'); if (a) { a.onclick = () => plPanel('h'); a.onkeydown = e => { if (e.key === 'Enter') plPanel('h'); }; }
+  document.querySelectorAll('.k').forEach(el => { const t = () => { const i = el.dataset.i; buka.has(i) ? buka.delete(i) : buka.add(i); lukis(); }; el.onclick = t; el.onkeydown = e => { if (e.key === 'Enter') t(); }; });
+  document.querySelectorAll('.pc').forEach(b => b.onclick = () => {
+    const pk = !!b.dataset.p;
+    sah(pk ? 'TUTUP PC PAKSA' : 'TUTUP PC', 'PC <b>' + esc(b.dataset.n) + '</b> (' + esc(b.dataset.i) + ') akan ' + (pk ? '<span class="r">ditutup WALAUPUN ada posisi terbuka</span> (posisi kekal dengan SL/TP).' : 'ditutup <b>hanya jika tiada posisi terbuka</b> (ada posisi = batal).') + '<br>MT5 ditutup dulu, PC shutdown 60 s kemudian. App PC ambil arahan dalam ~1 minit.',
+      () => hantarTutup(b.dataset.i, b.dataset.n, pk));
   });
+  if (plTab) plPanel(plTab);
 }
 async function muat() {
   if (!TOKEN) return loginView();
   $('#bOut').hidden = false; $('#bRef').hidden = false;
-  if (!data) $('#app').innerHTML = '<div class="card dim">memuat...</div>';
-  try {
-    const r = await rpc('admin_kesihatan', { p_token: TOKEN });
-    if (!r || !r.ok) { const m = (r && r.msg) || 'gagal'; if (/sesi|admin/i.test(m)) { TOKEN = null; ls.del('jp_token'); return loginView(m); } throw new Error(m); }
-    data = r; tAmbil = Date.now(); lukis();
-  } catch (e) {
-    if (!data) $('#app').innerHTML = '<div class="card r">Gagal ambil data: ' + esc(e.message) + '<div class="dim">Semak internet, tekan ⟳.</div></div>';
-  }
-  jam();
+  if (!P && !K) $('#app').innerHTML = '<div class="card dim">memuat...</div>';
+  const [rp, rk, rr] = await Promise.allSettled([rpc('admin_pantau', { p_token: TOKEN }), rpc('admin_kesihatan', { p_token: TOKEN }), rpc('perintah_senarai', { p_token: TOKEN })]);
+  const sesi = v => v.status === 'fulfilled' && v.value && v.value.ok === false && /sesi|admin/i.test(v.value.msg || '');
+  if (sesi(rk)) { TOKEN = null; ls.del('jp_token'); P = K = null; return loginView(rk.value.msg); }
+  if (rp.status === 'fulfilled' && rp.value && rp.value.ok) { P = rp.value; ralatP = null; }
+  else if (rp.status === 'rejected' && rp.reason && rp.reason.code === 404) ralatP = 'Jack Pantau belum aktif di server: jalankan UI\\supabase\\16_pantau.sql dalam Supabase SQL Editor, kemudian restart app PC.';
+  if (rk.status === 'fulfilled' && rk.value && rk.value.ok) K = rk.value;
+  if (rr.status === 'fulfilled' && rr.value && rr.value.ok) { const m = {}; (rr.value.perintah || []).forEach(p => { if (!m[p.ahli_id]) m[p.ahli_id] = p; }); for (const k in m) PR[k] = m[k]; }
+  if (P || K || ralatP) { tAmbil = Date.now(); lukis(); }
+  else $('#app').innerHTML = '<div class="card r">Gagal ambil data. Semak internet, tekan ⟳.</div>';
+  $('#umur').textContent = tAmbil ? new Date(tAmbil).toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) : '';
   clearTimeout(timer); timer = setTimeout(muat, SEGAR_S * 1000);
 }
-function jam() { $('#umur').textContent = tAmbil ? new Date(tAmbil).toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) : ''; }
 $('#bRef').onclick = () => muat();
-$('#bOut').onclick = async () => { try { if (TOKEN) await rpc('log_keluar', { p_token: TOKEN }); } catch (e) {} TOKEN = null; data = null; ls.del('jp_token'); clearTimeout(timer); loginView(); };
-document.addEventListener('visibilitychange', () => { if (!document.hidden && TOKEN && Date.now() - tAmbil > 30000) muat(); });
+$('#bOut').onclick = async () => { try { if (TOKEN) await rpc('log_keluar', { p_token: TOKEN }); } catch (e) {} TOKEN = null; P = K = null; ls.del('jp_token'); clearTimeout(timer); tutupOv(); loginView(); };
+document.addEventListener('visibilitychange', () => { if (!document.hidden && TOKEN && Date.now() - tAmbil > 15000) muat(); });
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 muat();
 </script>
