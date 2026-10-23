@@ -47,7 +47,7 @@ const URL_SB = "https://zggyxogijbthjmxulavv.supabase.co", KEY = "sb_publishable
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ls = { get(k){ try { return localStorage.getItem(k); } catch(e) { return null; } }, set(k,v){ try { localStorage.setItem(k,v); } catch(e){} }, del(k){ try { localStorage.removeItem(k); } catch(e){} } };
-let TOKEN = ls.get('jp_token'), timer = null, buka = new Set(), P = null, K = null, PR = {}, tAmbil = 0, plTab = null, ralatP = null;
+let PERANAN = ls.get('jp_peranan') || 'ADMIN', SAYA = null, PRS = null, TOKEN = ls.get('jp_token'), timer = null, buka = new Set(), P = null, K = null, PR = {}, tAmbil = 0, plTab = null, ralatP = null;
 async function rpc(nama, body) {
   const r = await fetch(URL_SB + '/rest/v1/rpc/' + nama, { method: 'POST', headers: { apikey: KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   if (!r.ok) { const e = new Error('HTTP ' + r.status); e.code = r.status; throw e; }
@@ -63,7 +63,7 @@ const LC = { OK: 'g', AMARAN: 'a', GAGAL: 'r', INFO: 'c' };
 // ---------- LOG MASUK ----------
 function loginView(msg) {
   $('#bOut').hidden = true; $('#bRef').hidden = true; $('#umur').textContent = '';
-  $('#app').innerHTML = '<div class="card" style="margin-top:30px"><div class="c" style="letter-spacing:2px;margin-bottom:10px">LOG MASUK ADMIN</div>' +
+  $('#app').innerHTML = '<div class="card" style="margin-top:30px"><div class="c" style="letter-spacing:2px;margin-bottom:10px">LOG MASUK</div>' +
     '<label class="dim" for="u">ID / emel</label><input id="u" autocomplete="username" value="' + esc(ls.get('jp_user') || '') + '">' +
     '<label class="dim" for="p">Kata laluan</label><div style="position:relative"><input id="p" type="password" autocomplete="current-password" style="padding-right:52px"><button id="eye" type="button" aria-label="Tunjuk kata laluan" style="position:absolute;right:4px;top:8px;border:0">👁</button></div>' +
     '<button id="go" type="button" style="width:100%;border-color:var(--c);color:var(--c)">MASUK</button><div class="r" id="lm" style="margin-top:8px;min-height:18px">' + esc(msg || '') + '</div></div>';
@@ -73,7 +73,7 @@ function loginView(msg) {
     try {
       const r = await rpc('log_masuk', { p_login: $('#u').value.trim(), p_kata: $('#p').value, p_peranti: 'Jack Pantau (telefon)' });
       if (!r || !r.ok) throw new Error((r && r.msg) || 'gagal');
-      if (r.ahli && r.ahli.peranan !== 'ADMIN') throw new Error('Bukan akaun ADMIN');
+      PERANAN = (r.ahli && r.ahli.peranan) || 'PENGGUNA'; ls.set('jp_peranan', PERANAN);
       TOKEN = r.token; ls.set('jp_token', TOKEN); ls.set('jp_user', $('#u').value.trim()); muat();
     } catch (e) { $('#lm').textContent = e.message; $('#lm').className = 'r'; }
   };
@@ -83,7 +83,7 @@ function loginView(msg) {
 // ---------- 1. AKAUN ----------
 function akaunHtml() {
   if (ralatP) return '<div class="card a">' + esc(ralatP) + '</div>';
-  if (!P || !P.data) return '<div class="card dim">Tiada data Command Center lagi. Buka app PC (log masuk ADMIN) — data dihantar setiap 60 s.</div>';
+  if (!P || !P.data) return '<div class="card dim">Tiada data akaun lagi. Buka app Jack Analyzer di PC (log masuk) — data dihantar setiap 60 s.</div>';
   const d = P.data, a = d.akaun || {}, m = a.minggu || {}, umur = P.masa ? (new Date(P.masa_server || Date.now()) - new Date(P.masa)) / 60000 : null;
   const lewat = umur == null || umur > 3;
   return '<div class="card" id="akaun" role="button" tabindex="0" style="cursor:pointer">' +
@@ -187,15 +187,31 @@ async function hantarTutup(id, nama, paksa) {
 }
 function alert0(m) { $('#ov').innerHTML = '<div class="ov" id="ovbg"><div class="card" style="max-width:420px;margin-top:20vh"><div class="r">' + esc(m) + '</div><button id="tidak" type="button" style="margin-top:10px">OK</button></div></div>'; $('#tidak').onclick = tutupOv; }
 
+// ---------- CLIENT: PC SAYA (TUTUP PC ke PC sendiri, SQL 17) ----------
+function pcSayaHtml() {
+  const pr = PRS, nm = (SAYA && (SAYA.nama || SAYA.id)) || 'PC saya';
+  return '<div class="h"><span>PC SAYA</span><span class="dim">' + esc((SAYA && SAYA.id) || '') + '</span></div><div class="card">' +
+    '<div class="dim" style="font-size:12px">TUTUP PC: MT5 ditutup dulu, PC shutdown 60 s kemudian. App PC ambil arahan dalam ~1 minit (arahan batal jika PC tak ambil dalam 15 min).</div>' +
+    '<div class="row" style="margin-top:8px;align-items:center"><span style="font-size:10px" class="' + (pr ? ({ SIAP: 'g', GAGAL: 'r', BATAL: 'dd' }[pr.status] || 'a') : 'dd') + '">' + (pr ? '#' + pr.id + ' ' + esc(pr.status) + (pr.nota ? ' · ' + esc(pr.nota) : '') : '') + '</span>' +
+    '<span style="white-space:nowrap"><button type="button" class="btn-a pc" data-saya="1" data-i="' + esc((SAYA && SAYA.id) || '') + '" data-n="' + esc(nm) + '">TUTUP PC</button> <button type="button" class="btn-r pc" data-saya="1" data-p="1" data-i="' + esc((SAYA && SAYA.id) || '') + '" data-n="' + esc(nm) + '">PAKSA</button></span></div></div>';
+}
+async function hantarTutupSaya(paksa) {
+  try {
+    const q = await rpc('perintah_saya', { p_token: TOKEN, p_jenis: paksa ? 'TUTUP_PC_PAKSA' : 'TUTUP_PC' });
+    if (!q || !q.ok) throw new Error((q && q.msg) || 'gagal');
+    PRS = { id: q.id || '?', status: 'BARU', nota: 'dihantar · app PC ambil dalam ~1 min' }; lukis();
+  } catch (e) { alert0('Gagal hantar: ' + e.message); }
+}
 // ---------- LUKIS & MUAT ----------
 function lukis() {
-  $('#app').innerHTML = akaunHtml() + eaHtml() + posHtml() + kesHtml() + '<div class="foot">Pantau sahaja · data PC setiap 60 s · client setiap 5 min · auto muat ' + SEGAR_S + ' s</div>';
+  const adm = PERANAN === 'ADMIN';
+  $('#app').innerHTML = akaunHtml() + eaHtml() + posHtml() + (adm ? kesHtml() : pcSayaHtml()) + '<div class="foot">Pantau sahaja · data PC setiap 60 s' + (adm ? ' · client setiap 5 min' : '') + ' · auto muat ' + SEGAR_S + ' s</div>';
   const a = $('#akaun'); if (a) { a.onclick = () => plPanel('h'); a.onkeydown = e => { if (e.key === 'Enter') plPanel('h'); }; }
   document.querySelectorAll('.k').forEach(el => { const t = () => { const i = el.dataset.i; buka.has(i) ? buka.delete(i) : buka.add(i); lukis(); }; el.onclick = t; el.onkeydown = e => { if (e.key === 'Enter') t(); }; });
   document.querySelectorAll('.pc').forEach(b => b.onclick = () => {
     const pk = !!b.dataset.p;
     sah(pk ? 'TUTUP PC PAKSA' : 'TUTUP PC', 'PC <b>' + esc(b.dataset.n) + '</b> (' + esc(b.dataset.i) + ') akan ' + (pk ? '<span class="r">ditutup WALAUPUN ada posisi terbuka</span> (posisi kekal dengan SL/TP).' : 'ditutup <b>hanya jika tiada posisi terbuka</b> (ada posisi = batal).') + '<br>MT5 ditutup dulu, PC shutdown 60 s kemudian. App PC ambil arahan dalam ~1 minit.',
-      () => hantarTutup(b.dataset.i, b.dataset.n, pk));
+      () => b.dataset.saya ? hantarTutupSaya(pk) : hantarTutup(b.dataset.i, b.dataset.n, pk));
   });
   if (plTab) plPanel(plTab);
 }
@@ -203,6 +219,7 @@ async function muat() {
   if (!TOKEN) return loginView();
   $('#bOut').hidden = false; $('#bRef').hidden = false;
   if (!P && !K) $('#app').innerHTML = '<div class="card dim">memuat...</div>';
+  if (PERANAN !== 'ADMIN') return muatClient();
   const [rp, rk, rr] = await Promise.allSettled([rpc('admin_pantau', { p_token: TOKEN }), rpc('admin_kesihatan', { p_token: TOKEN }), rpc('perintah_senarai', { p_token: TOKEN })]);
   const sesi = v => v.status === 'fulfilled' && v.value && v.value.ok === false && /sesi|admin/i.test(v.value.msg || '');
   if (sesi(rk)) { TOKEN = null; ls.del('jp_token'); P = K = null; return loginView(rk.value.msg); }
@@ -215,8 +232,19 @@ async function muat() {
   $('#umur').textContent = tAmbil ? new Date(tAmbil).toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) : '';
   clearTimeout(timer); timer = setTimeout(muat, SEGAR_S * 1000);
 }
+async function muatClient() {   // v1.2: client = akaun sendiri sahaja (SQL 17 pantau_saya / perintah_saya_status)
+  const [rp, rs] = await Promise.allSettled([rpc('pantau_saya', { p_token: TOKEN }), rpc('perintah_saya_status', { p_token: TOKEN })]);
+  if (rp.status === 'fulfilled' && rp.value && rp.value.ok === false && /sesi/i.test(rp.value.msg || '')) { TOKEN = null; ls.del('jp_token'); P = null; return loginView(rp.value.msg); }
+  if (rp.status === 'fulfilled' && rp.value && rp.value.ok) { P = rp.value; SAYA = rp.value.ahli || SAYA; ralatP = null; }
+  else if (rp.status === 'rejected' && rp.reason && rp.reason.code === 404) ralatP = 'Pantau telefon untuk client belum diaktifkan oleh admin. Cuba lagi nanti.';
+  if (rs.status === 'fulfilled' && rs.value && rs.value.ok) PRS = rs.value.perintah;
+  if (P || ralatP) { tAmbil = Date.now(); lukis(); }
+  else $('#app').innerHTML = '<div class="card r">Gagal ambil data. Semak internet, tekan ⟳.</div>';
+  $('#umur').textContent = tAmbil ? new Date(tAmbil).toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) : '';
+  clearTimeout(timer); timer = setTimeout(muat, SEGAR_S * 1000);
+}
 $('#bRef').onclick = () => muat();
-$('#bOut').onclick = async () => { try { if (TOKEN) await rpc('log_keluar', { p_token: TOKEN }); } catch (e) {} TOKEN = null; P = K = null; ls.del('jp_token'); clearTimeout(timer); tutupOv(); loginView(); };
+$('#bOut').onclick = async () => { try { if (TOKEN) await rpc('log_keluar', { p_token: TOKEN }); } catch (e) {} TOKEN = null; P = K = SAYA = PRS = null; ls.del('jp_token'); ls.del('jp_peranan'); clearTimeout(timer); tutupOv(); loginView(); };
 document.addEventListener('visibilitychange', () => { if (!document.hidden && TOKEN && Date.now() - tAmbil > 15000) muat(); });
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 muat();
