@@ -93,13 +93,14 @@ function akaunHtml() {
     '<div class="row"><span class="dim">P/L HARI INI</span><span class="' + kc(a.pl_hari) + '" style="font-weight:700">' + sg(a.pl_hari) + '</span></div>' +
     '<div class="row"><span class="dim">MODAL AWAL HARI</span><span>' + f2(a.modal_awal) + '</span></div>' +
     '<div class="row"><span class="dim">MINGGU UNTUNG' + (m.mula ? ' (mula ' + esc(m.mula) + ')' : '') + '</span><span>' + (m.untung ?? '-') + ' / ' + (m.ada ?? '-') + ' minggu</span></div>' +
+    (a.mula_kira ? '<div class="row"><span class="a">P/L SEJAK MULA KIRA (' + esc(a.mula_kira) + ')</span><span class="' + kc(a.pl_sejak) + '" style="font-weight:700">' + sg(a.pl_sejak) + '</span></div>' : '') +
     '<div class="row" style="font-size:11px;margin-top:4px"><span class="' + (lewat ? 'a' : 'dd') + '">data PC: ' + ago(umur) + (lewat ? ' ⚠ app PC tak hantar?' : '') + '</span><span class="c">tekan: senarai trade ▸</span></div></div>';
 }
 // ---------- 2. P/L AKAUN (popup 5 tab) ----------
 const TAB = [['h', 'HARI INI'], ['s', 'SEMALAM'], ['m', 'MINGGU INI'], ['ml', 'MINGGU LALU'], ['b', 'BULAN INI']];
 function plPanel(tab) {
   plTab = tab; const d = (P && P.data) || {}, L = (d.trade || {})[tab] || [], multi = ['m', 'ml', 'b'].includes(tab);
-  const lbl = d.label || {}, sub = { h: (d.akaun || {}).hari || '', s: lbl.s || '', m: 'mula ' + (lbl.m || 'Isnin'), ml: lbl.ml || '', b: lbl.b || '' }[tab];
+  const lbl = d.label || {}, mk = (d.akaun || {}).mula_kira, sub = { h: (d.akaun || {}).hari || '', s: lbl.s || '', m: 'mula ' + (lbl.m || 'Isnin'), ml: lbl.ml || '', b: lbl.b || '' }[tab] + (mk ? ' · mula kira ' + mk : '');
   let rows = '', cur = null, acc = null; const hari = [];
   const tutupHari = () => { if (acc) { rows += '<div class="sub row"><span class="dim">jumlah ' + esc(cur) + '</span><span><span class="' + kc(acc.pips) + '">' + (acc.pips > 0 ? '+' : '') + acc.pips.toFixed(1) + 'p</span> &nbsp;<b class="' + kc(acc.pl) + '">' + sg(acc.pl) + '</b></span></div>'; hari.push(acc); } };
   L.forEach(r => {
