@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071016">
+<title>Jack Pantau</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#071016;--card:#0c1820;--line:#16303d;--c:#35d7ff;--g:#39ff88;--a:#ffb547;--r:#ff6b7a;--t:#d7e6ee;--dim:#7d96a4}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--t);font:14px/1.45 ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace}
+header{position:sticky;top:0;z-index:5;background:rgba(7,16,22,.96);border-bottom:1px solid var(--line);padding:12px 16px calc(10px);display:flex;align-items:center;gap:10px}
+header h1{font-size:15px;letter-spacing:2px;margin:0;color:var(--c);flex:1}
+button{font:inherit;color:var(--t);background:transparent;border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-height:40px}
+button:active{background:#10222c}
+main{padding:12px 16px 40px;max-width:640px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.h{font-size:11px;letter-spacing:2px;color:var(--dim);margin:18px 2px 8px}
+.row{display:flex;justify-content:space-between;gap:8px;padding:3px 0}
+.big{font-size:26px;font-weight:700}
+.lamp{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.g{color:var(--g)}.a{color:var(--a)}.r{color:var(--r)}.c{color:var(--c)}.dim{color:var(--dim)}
+.k{cursor:pointer}.k .top{display:flex;align-items:center;gap:8px}.k .nm{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-top:8px;font-size:13px}
+.det{margin-top:10px;border-top:1px solid var(--line);padding-top:8px;font-size:12px}
+.det .it{padding:5px 0;border-bottom:1px dashed #12262f}
+.st{font-weight:700;font-size:11px;margin-right:6px}
+input{font:inherit;width:100%;padding:12px;border-radius:8px;border:1px solid var(--line);background:#06121a;color:var(--t);margin:6px 0 12px}
+.msg{min-height:20px;font-size:12px}
+.foot{font-size:11px;color:var(--dim);text-align:center;margin-top:16px}
+</style>
+</head>
+<body>
+<header><h1>JACK PANTAU</h1><span id="umur" class="dim" style="font-size:11px"></span><button id="bRef" type="button" aria-label="Muat semula">⟳</button><button id="bOut" type="button" aria-label="Log keluar" hidden>⎋</button></header>
+<main id="app"></main>
+<script>
+const URL_SB = "https://zggyxogijbthjmxulavv.supabase.co", KEY = "sb_publishable_lewTn_a8rhi6GYqhonkFpw_GizqeaNO", AKAUN_SAYA = 1100569266, SEGAR_S = 60;
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ls = { get(k){ try { return localStorage.getItem(k); } catch(e) { return null; } }, set(k,v){ try { localStorage.setItem(k,v); } catch(e){} }, del(k){ try { localStorage.removeItem(k); } catch(e){} } };
+let TOKEN = ls.get('jp_token'), timer = null, buka = new Set(), data = null, tAmbil = 0;
+async function rpc(nama, body) {
+  const r = await fetch(URL_SB + '/rest/v1/rpc/' + nama, { method: 'POST', headers: { apikey: KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+function loginView(msg) {
+  $('#bOut').hidden = true; $('#bRef').hidden = true; $('#umur').textContent = '';
+  $('#app').innerHTML = '<div class="card" style="margin-top:30px"><div class="c" style="letter-spacing:2px;margin-bottom:10px">LOG MASUK ADMIN</div>' +
+    '<label class="dim" for="u">ID / emel</label><input id="u" autocomplete="username" value="' + esc(ls.get('jp_user') || '') + '">' +
+    '<label class="dim" for="p">Kata laluan</label><div style="position:relative"><input id="p" type="password" autocomplete="current-password" style="padding-right:52px"><button id="eye" type="button" aria-label="Tunjuk kata laluan" style="position:absolute;right:4px;top:8px;border:0">👁</button></div>' +
+    '<button id="go" type="button" style="width:100%;border-color:var(--c);color:var(--c)">MASUK</button><div class="msg r" id="lm" style="margin-top:8px">' + esc(msg || '') + '</div></div>';
+  $('#eye').onclick = () => { const p = $('#p'); p.type = p.type === 'password' ? 'text' : 'password'; };
+  const go = async () => {
+    $('#lm').textContent = 'menyemak...'; $('#lm').className = 'msg dim';
+    try {
+      const r = await rpc('log_masuk', { p_login: $('#u').value.trim(), p_kata: $('#p').value, p_peranti: 'Jack Pantau (telefon)' });
+      if (!r || !r.ok) throw new Error((r && r.msg) || 'gagal');
+      if (r.ahli && r.ahli.peranan !== 'ADMIN') throw new Error('Bukan akaun ADMIN');
+      TOKEN = r.token; ls.set('jp_token', TOKEN); ls.set('jp_user', $('#u').value.trim()); muat();
+    } catch (e) { $('#lm').textContent = e.message; $('#lm').className = 'msg r'; }
+  };
+  $('#go').onclick = go; $('#p').onkeydown = e => { if (e.key === 'Enter') go(); };
+}
+const f2 = v => v == null || v === '' ? '-' : Number(v).toFixed(2);
+const sg = v => v == null ? '-' : (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(Number(v)).toFixed(2);
+const kc = v => v == null ? '' : v < 0 ? 'r' : v > 0 ? 'g' : '';
+const ago = m => m == null ? 'tiada laporan' : m < 1 ? 'baru' : m < 60 ? Math.round(m) + ' min lalu' : m < 1440 ? Math.round(m / 60) + ' jam lalu' : Math.round(m / 1440) + ' hari lalu';
+const LC = { OK: 'g', AMARAN: 'a', GAGAL: 'r', INFO: 'c' };
+function siap(r) {
+  const now = r.masa_server ? new Date(r.masa_server).getTime() : Date.now();
+  return (r.klien || []).map(x => {
+    const umur = x.masa ? (now - new Date(x.masa).getTime()) / 60000 : null, rg = x.ringkas || {};
+    x._umur = umur; x._on = umur != null && umur <= 10 ? 'ON' : umur != null && umur <= 30 ? 'LEWAT' : 'OFF';
+    x._g = rg.GAGAL || 0; x._a = rg.AMARAN || 0; return x;
+  });
+}
+function lampu(on) { return '<span class="lamp" style="background:var(--' + ({ ON: 'g', LEWAT: 'a', OFF: 'r' }[on]) + ')"></span>'; }
+function detail(x) {
+  const R = x.rows || [], pr = R.filter(y => /^PRESTASI /.test(y.nama)), sis = R.filter(y => !/^PRESTASI /.test(y.nama));
+  const bad = sis.filter(y => y.st === 'GAGAL' || y.st === 'AMARAN'), ok = sis.filter(y => y.st !== 'GAGAL' && y.st !== 'AMARAN');
+  const it = y => '<div class="it"><span class="st ' + (LC[y.st] || '') + '">' + esc(y.st) + '</span>' + esc(y.nama) + ': ' + esc(y.nilai) + (y.nota ? '<div class="dim">' + esc(y.nota) + '</div>' : '') + '</div>';
+  return '<div class="det">' + (pr.length ? '<div class="c" style="margin-bottom:4px">PRESTASI EA</div>' + pr.map(y => '<div class="it"><b>' + esc(y.nama.replace('PRESTASI ', '')) + '</b><div>' + esc(y.nilai) + '</div><div class="dim">' + esc(y.nota || '') + '</div></div>').join('') : '') +
+    (bad.length ? '<div class="a" style="margin:8px 0 4px">PERLU PERHATIAN</div>' + bad.map(it).join('') : '') +
+    '<div class="dim" style="margin:8px 0 4px">SEMAK SISTEM</div>' + ok.map(it).join('') + '</div>';
+}
+function kad(x, saya) {
+  const d = x.duit || {}, op = buka.has(x.id);
+  return '<div class="card k" data-i="' + esc(x.id) + '" role="button" tabindex="0" aria-expanded="' + op + '">' +
+    '<div class="top">' + lampu(x._on) + '<span class="nm">' + esc(saya ? 'AKAUN SAYA · ' + (x.akaun || '') : (x.nama || x.id)) + '</span><span class="dim" style="font-size:11px">' + esc(x.id) + '</span></div>' +
+    (saya ? '<div class="row" style="margin-top:8px;align-items:baseline"><span class="dim">P/L hari ini</span><span class="big ' + kc(d.pl_hari) + '">' + sg(d.pl_hari) + '</span></div>' : '') +
+    '<div class="grid"><span class="dim">Balance</span><span>' + f2(d.balance) + '</span><span class="dim">Equity</span><span>' + f2(d.equity) + '</span>' +
+    (saya ? '' : '<span class="dim">P/L hari ini</span><span class="' + kc(d.pl_hari) + '">' + sg(d.pl_hari) + '</span>') +
+    '<span class="dim">Posisi</span><span>' + (d.posisi ?? '-') + '</span>' +
+    '<span class="dim">Laporan</span><span class="' + (x._on === 'ON' ? 'g' : x._on === 'LEWAT' ? 'a' : 'r') + '">' + ago(x._umur) + '</span>' +
+    '<span class="dim">Semak</span><span><span class="g">' + ((x.ringkas || {}).OK || 0) + '</span> / <span class="a">' + x._a + '</span> / <span class="r">' + x._g + '</span></span>' +
+    (saya ? '' : '<span class="dim">Akaun</span><span>' + esc(x.akaun || '-') + '</span>') + '<span class="dim">Versi</span><span>' + esc(x.versi || '-') + '</span></div>' +
+    (op ? detail(x) : '<div class="dim" style="font-size:11px;margin-top:6px">tekan untuk butiran ▾</div>') + '</div>';
+}
+function lukis() {
+  if (!data) return;
+  const K = siap(data), saya = K.find(x => Number(x.akaun) === AKAUN_SAYA), lain = K.filter(x => x !== saya);
+  const n = k => lain.filter(x => x._on === k).length;
+  $('#app').innerHTML = (saya ? kad(saya, true) : '<div class="card dim">Akaun ' + AKAUN_SAYA + ' tiada laporan.</div>') +
+    '<div class="h">CLIENT · ' + lain.length + ' · <span class="g">' + n('ON') + ' online</span> · <span class="a">' + n('LEWAT') + ' lewat</span> · <span class="r">' + n('OFF') + ' offline</span></div>' +
+    lain.map(x => kad(x, false)).join('') +
+    '<div class="foot">Data dari laporan app PC (setiap 5 min) · auto muat semula ' + SEGAR_S + ' s · pantau sahaja</div>';
+  document.querySelectorAll('.k').forEach(el => {
+    const t = () => { const i = el.dataset.i; buka.has(i) ? buka.delete(i) : buka.add(i); lukis(); };
+    el.onclick = t; el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); t(); } };
+  });
+}
+async function muat() {
+  if (!TOKEN) return loginView();
+  $('#bOut').hidden = false; $('#bRef').hidden = false;
+  if (!data) $('#app').innerHTML = '<div class="card dim">memuat...</div>';
+  try {
+    const r = await rpc('admin_kesihatan', { p_token: TOKEN });
+    if (!r || !r.ok) { const m = (r && r.msg) || 'gagal'; if (/sesi|admin/i.test(m)) { TOKEN = null; ls.del('jp_token'); return loginView(m); } throw new Error(m); }
+    data = r; tAmbil = Date.now(); lukis();
+  } catch (e) {
+    if (!data) $('#app').innerHTML = '<div class="card r">Gagal ambil data: ' + esc(e.message) + '<div class="dim">Semak internet, tekan ⟳.</div></div>';
+  }
+  jam();
+  clearTimeout(timer); timer = setTimeout(muat, SEGAR_S * 1000);
+}
+function jam() { $('#umur').textContent = tAmbil ? new Date(tAmbil).toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) : ''; }
+$('#bRef').onclick = () => muat();
+$('#bOut').onclick = async () => { try { if (TOKEN) await rpc('log_keluar', { p_token: TOKEN }); } catch (e) {} TOKEN = null; data = null; ls.del('jp_token'); clearTimeout(timer); loginView(); };
+document.addEventListener('visibilitychange', () => { if (!document.hidden && TOKEN && Date.now() - tAmbil > 30000) muat(); });
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+muat();
+</script>
+</body>
+</html>
