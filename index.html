@@ -59,6 +59,10 @@ async function rpc(nama, body) {
 const f2 = v => v == null || v === '' ? '-' : Number(v).toFixed(2);
 const sg = v => v == null ? '-' : (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(Number(v)).toFixed(2);
 const sp = v => v == null ? '' : ' (' + (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(Number(v)).toFixed(1) + 'p)';
+// v1.7 (Jack 7 Nov): akaun USC -> setiap nilai wang + (\$USD) di sebelah (1 USD = 100 USC)
+const CENT = () => /^USC$/i.test(((D().akaun || {}).mata) || '');
+const usd = v => v == null || v === '' || !CENT() ? '' : ' <span class="dim" style="font-size:.85em;font-weight:400">(' + (v < 0 ? '−' : '') + '$' + Math.abs(Number(v) / 100).toFixed(2) + ')</span>';
+const sgM = v => sg(v) + usd(v), f2M = v => f2(v) + usd(v);
 const kc = v => v == null ? '' : v < 0 ? 'r' : v > 0 ? 'g' : '';
 const ago = m => m == null ? 'tiada laporan' : m < 1 ? 'baru' : m < 60 ? Math.round(m) + ' min lalu' : m < 1440 ? Math.round(m / 60) + ' jam lalu' : Math.round(m / 1440) + ' hari lalu';
 const LC = { OK: 'g', AMARAN: 'a', GAGAL: 'r', INFO: 'c' };
@@ -91,12 +95,12 @@ function akaunHtml() {
   const lewat = umur == null || umur > 3;
   return '<div class="card" id="akaun" role="button" tabindex="0" style="cursor:pointer">' +
     '<div class="row"><span class="c" style="letter-spacing:2px;font-weight:700">AKAUN</span><span class="dim" style="font-size:11px;text-align:right">' + esc(a.login || '') + ' · ' + esc(a.hari || '') + '</span></div>' +
-    '<div class="big" style="margin:4px 0">' + f2(a.balance) + ' <span style="font-size:14px">' + esc(a.mata || 'USD') + '</span></div>' +
-    '<div class="row"><span class="dim">EQUITY</span><span>' + f2(a.equity) + '</span></div>' +
-    '<div class="row"><span class="dim">P/L HARI INI</span><span class="' + kc(a.pl_hari) + '" style="font-weight:700">' + sg(a.pl_hari) + '</span></div>' +
-    '<div class="row"><span class="dim">MODAL AWAL HARI</span><span>' + f2(a.modal_awal) + '</span></div>' +
+    '<div class="big" style="margin:4px 0">' + f2(a.balance) + ' <span style="font-size:14px">' + esc(a.mata || 'USD') + '</span>' + usd(a.balance) + '</div>' +
+    '<div class="row"><span class="dim">EQUITY</span><span>' + f2M(a.equity) + '</span></div>' +
+    '<div class="row"><span class="dim">P/L HARI INI</span><span class="' + kc(a.pl_hari) + '" style="font-weight:700">' + sgM(a.pl_hari) + '</span></div>' +
+    '<div class="row"><span class="dim">MODAL AWAL HARI</span><span>' + f2M(a.modal_awal) + '</span></div>' +
     '<div class="row"><span class="dim">MINGGU UNTUNG' + (m.mula ? ' (mula ' + esc(m.mula) + ')' : '') + '</span><span>' + (m.untung ?? '-') + ' / ' + (m.ada ?? '-') + ' minggu</span></div>' +
-    (a.mula_kira ? '<div class="row"><span class="a">P/L SEJAK MULA KIRA (' + esc(a.mula_kira) + ')</span><span class="' + kc(a.pl_sejak) + '" style="font-weight:700">' + sg(a.pl_sejak) + '</span></div>' : '') +
+    (a.mula_kira ? '<div class="row"><span class="a">P/L SEJAK MULA KIRA (' + esc(a.mula_kira) + ')</span><span class="' + kc(a.pl_sejak) + '" style="font-weight:700">' + sgM(a.pl_sejak) + '</span></div>' : '') +
     '<div class="row" style="font-size:11px;margin-top:4px"><span class="' + (lewat ? 'a' : 'dd') + '">data PC: ' + ago(umur) + (lewat ? ' ⚠ app PC tak hantar?' : '') + '</span><span class="c">tekan: senarai trade ▸</span></div></div>';
 }
 // ---------- 2. P/L AKAUN (popup 5 tab) ----------
@@ -107,12 +111,12 @@ function plPanel(tab, ea) {
   plTab = tab; const d = D(), L = ((d.trade || {})[tab] || []).filter(r => !plEA || r[3] === plEA), multi = ['m', 'ml', 'b'].includes(tab);
   const lbl = d.label || {}, mk = (d.akaun || {}).mula_kira, sub = { h: (d.akaun || {}).hari || '', s: lbl.s || '', m: 'mula ' + (lbl.m || 'Isnin'), ml: lbl.ml || '', b: lbl.b || '' }[tab] + (mk ? ' · mula kira ' + mk : '');
   let rows = '', cur = null, acc = null; const hari = [];
-  const tutupHari = () => { if (acc) { rows += '<div class="sub row"><span class="dim">jumlah ' + esc(cur) + '</span><span><span class="' + kc(acc.pips) + '">' + (acc.pips > 0 ? '+' : '') + acc.pips.toFixed(1) + 'p</span> &nbsp;<b class="' + kc(acc.pl) + '">' + sg(acc.pl) + '</b></span></div>'; hari.push(acc); } };
+  const tutupHari = () => { if (acc) { rows += '<div class="sub row"><span class="dim">jumlah ' + esc(cur) + '</span><span><span class="' + kc(acc.pips) + '">' + (acc.pips > 0 ? '+' : '') + acc.pips.toFixed(1) + 'p</span> &nbsp;<b class="' + kc(acc.pl) + '">' + sgM(acc.pl) + '</b></span></div>'; hari.push(acc); } };
   L.forEach(r => {
     const [hr, tin, tout, ea, arah, lot, en, tu, pips, pl, sebab] = r;
     if (multi && hr !== cur) { tutupHari(); cur = hr; acc = { pl: 0, pips: 0 }; }
     if (acc) { acc.pl += pl || 0; acc.pips += pips || 0; }
-    rows += '<div class="tr"><div class="row"><span>' + (multi ? esc(hr) + ' · ' : '') + esc(tin || '-') + '→' + esc(tout) + ' <b>' + esc(ea || '-') + '</b> <span class="' + (arah === 'BUY' ? 'g' : 'r') + '">' + esc(arah) + '</span></span><b class="' + kc(pl) + '">' + sg(pl) + '</b></div>' +
+    rows += '<div class="tr"><div class="row"><span>' + (multi ? esc(hr) + ' · ' : '') + esc(tin || '-') + '→' + esc(tout) + ' <b>' + esc(ea || '-') + '</b> <span class="' + (arah === 'BUY' ? 'g' : 'r') + '">' + esc(arah) + '</span></span><b class="' + kc(pl) + '">' + sgM(pl) + '</b></div>' +
       '<div class="row dim" style="font-size:11px"><span>' + (lot != null ? lot.toFixed(2) : '') + ' · ' + (en != null ? en.toFixed(2) : '-') + ' → ' + (tu != null ? tu.toFixed(2) : '-') + '</span><span><span class="' + kc(pips) + '">' + (pips == null ? '' : (pips > 0 ? '+' : '') + pips.toFixed(1) + 'p') + '</span> · ' + esc(sebab || '') + '</span></div></div>';
   });
   tutupHari();
@@ -123,8 +127,8 @@ function plPanel(tab, ea) {
     '<div class="tabs">' + TAB.map(([k, t]) => '<button type="button" data-t="' + k + '" class="' + (k === tab ? 'on' : '') + '">' + t + '</button>').join('') + '</div>' +
     '<div class="dim" style="font-size:11px;margin-bottom:6px">' + esc(sub) + '</div>' + rows +
     '<div class="row" style="margin-top:10px;font-weight:700"><span>JUMLAH · ' + L.length + ' trade · ' + M + 'M/' + Kk + 'K' + (L.length ? ' · WR ' + Math.round(M / L.length * 100) + '%' : '') + ' · ' + (pj > 0 ? '+' : '') + pj.toFixed(1) + 'p' +
-    (multi && hari.length ? ' · hari untung ' + hari.filter(h => h.pl > 0).length + '/' + hari.length : '') + '</span><span class="' + kc(tot) + '">' + sg(tot) + '</span></div>' +
-    (Math.abs(baki) >= 0.005 ? '<div class="dim" style="font-size:11px">termasuk komisen / swap posisi terbuka: ' + sg(baki) + '</div>' : '') + '</div></div>';
+    (multi && hari.length ? ' · hari untung ' + hari.filter(h => h.pl > 0).length + '/' + hari.length : '') + '</span><span class="' + kc(tot) + '">' + sgM(tot) + '</span></div>' +
+    (Math.abs(baki) >= 0.005 ? '<div class="dim" style="font-size:11px">termasuk komisen / swap posisi terbuka: ' + sgM(baki) + '</div>' : '') + '</div></div>';
   $('#ovx').onclick = tutupOv; $('#ovbg').onclick = e => { if (e.target.id === 'ovbg') tutupOv(); };
   document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => plPanel(b.dataset.t));
 }
@@ -137,12 +141,12 @@ function eaHtml() {
   return '<div class="h"><span>EXPERT ADVISORS</span><span class="dim">' + n + ' / ' + E.length + ' ada posisi</span></div><div class="eag">' + E.map(e => {
     const slot = e.used == null ? null : e.mx != null ? e.baki > 0 : e.st !== 'END', run = slot === false && e.posisi > 0;
     const sc = e.off ? 'var(--r)' : slot == null ? 'var(--t)' : slot ? 'var(--g)' : run ? 'var(--a)' : 'var(--r)';   // v1.3: OFF = merah
-    const st = e.posisi > 0 ? '<span class="c">● IN TRADE · ' + e.posisi + ' · ' + sg(e.floating) + sp(e.fpips) + '</span>'
+    const st = e.posisi > 0 ? '<span class="c">● IN TRADE · ' + e.posisi + ' · ' + sgM(e.floating) + sp(e.fpips) + '</span>'
       : e.st === 'WAIT' ? '<span class="g" style="font-weight:700">○ WAITING SETUP</span>' + (e.why ? '<span class="dim"> · ' + esc(e.why) + '</span>' : '')
       : e.st === 'END' ? '<span class="dd">■ END' + (e.why ? ' · ' + esc(e.why) : '') + '</span>' : '<span class="dd">○ tiada posisi</span>';
     const jb = e.magic === 202610 && d.jbo ? (d.jbo.auto === false ? '<span class="r" style="font-weight:700">⚠ AUTO OFF</span>' : d.jbo.auto ? '<span class="g">AUTO ON · lot ' + (d.jbo.lot != null ? (+d.jbo.lot).toFixed(2) : '?') + '</span>' : '') : '';
     return '<div class="ea" data-ea="' + esc(e.nama) + '" role="button" tabindex="0" style="cursor:pointer"><span class="tag" style="border-color:' + sc + ';color:' + sc + '">' + esc(e.nama) + '</span><span class="dd" style="font-size:10px">' + esc(e.ver || '?') + ' · ' + esc(e.tf || '?') + ' · #' + e.magic + '</span>' +
-      '<div class="row"><span class="dim">P/L</span><span class="' + kc(e.pl) + '">' + sg(e.pl) + '</span></div>' + (e.tutup ? '<div class="row dd" style="font-size:10px;justify-content:flex-end">' + sp(e.pips) + '</div>' : '') +
+      '<div class="row"><span class="dim">P/L</span><span class="' + kc(e.pl) + '">' + sgM(e.pl) + '</span></div>' + (e.tutup ? '<div class="row dd" style="font-size:10px;justify-content:flex-end">' + sp(e.pips) + '</div>' : '') +
       '<div class="row"><span class="dim">TUTUP</span><span>' + (e.tutup ?? 0) + '</span></div>' +
       (e.used != null ? '<div class="row"><span class="dim">SLOT</span><span class="' + (e.mx == null ? 'dim' : e.baki > 0 ? 'g' : 'r') + '">' + (e.mx == null ? e.used + ' · tiada had' : e.used + '/' + e.mx + ' · ' + (e.baki > 0 ? 'baki ' + e.baki : 'PENUH')) + '</span></div>' : '') +
       '<div class="c" style="font-size:10px;text-align:right">tekan: laporan ▸</div>' + (jb ? '<div style="font-size:11px">' + jb + '</div>' : '') + (e.off ? '<div class="r" style="font-size:11px;font-weight:700">⏸ OFF · tiada entry baru</div>' : '') + '<div style="font-size:11px">' + st + '</div></div>';
@@ -154,9 +158,9 @@ function posHtml() {
   const jum = L.reduce((s, p) => s + (p.pl || 0), 0), jp = L.reduce((s, p) => s + (p.pips || 0), 0);
   const jarak = (p, x) => !x || !p.pip ? '' : '<span class="dd" style="font-size:10px"> ' + (Math.abs(x - p.open) / p.pip).toFixed(1) + 'p</span>';
   return '<div class="h"><span>POSISI TERBUKA</span><span class="dim">' + L.length + '</span></div><div class="card">' +
-    (L.length ? L.map(p => '<div class="tr"><div class="row"><span><b>' + esc(p.ea) + '</b> · ' + esc(String(p.simbol || '').split('.')[0]) + ' <span class="' + (p.arah === 'BUY' ? 'g' : 'r') + '">' + esc(p.arah) + '</span> ' + (p.lot != null ? p.lot.toFixed(2) : '') + '</span><b class="' + kc(p.pl) + '">' + sg(p.pl) + '</b></div>' +
+    (L.length ? L.map(p => '<div class="tr"><div class="row"><span><b>' + esc(p.ea) + '</b> · ' + esc(String(p.simbol || '').split('.')[0]) + ' <span class="' + (p.arah === 'BUY' ? 'g' : 'r') + '">' + esc(p.arah) + '</span> ' + (p.lot != null ? p.lot.toFixed(2) : '') + '</span><b class="' + kc(p.pl) + '">' + sgM(p.pl) + '</b></div>' +
       '<div class="row dim" style="font-size:11px"><span>open ' + esc(p.open) + ' · SL ' + esc(p.sl) + jarak(p, p.sl) + ' · TP ' + esc(p.tp) + jarak(p, p.tp) + '</span><span class="' + kc(p.pips) + '">' + (p.pips == null ? '' : (p.pips > 0 ? '+' : '') + p.pips.toFixed(1) + 'p') + '</span></div></div>').join('') +
-      '<div class="row" style="margin-top:8px;font-weight:700"><span class="c">JUMLAH · ' + L.length + ' posisi</span><span class="' + kc(jum) + '">' + sg(jum) + sp(jp) + '</span></div>' + tutupHtml(L)
+      '<div class="row" style="margin-top:8px;font-weight:700"><span class="c">JUMLAH · ' + L.length + ' posisi</span><span class="' + kc(jum) + '">' + sgM(jum) + sp(jp) + '</span></div>' + tutupHtml(L)
       : '<div class="dim">Tiada posisi terbuka</div>') + '</div>';
 }
 // ---------- 4b. v1.6 (Jack 7 Nov): CLOSE ALL PROFIT / CLOSE ALL LOSS (sama app PC) - akaun USD sahaja ----------
@@ -166,8 +170,8 @@ function tutupHtml(L) {
   const U = L.filter(p => p.pl > 0), R = L.filter(p => p.pl < 0), sU = U.reduce((s, p) => s + p.pl, 0), sR = R.reduce((s, p) => s + p.pl, 0);
   let st = '';
   if (TUTUP_ST) { const x = TUTUP_ST.r; st = '<div style="font-size:11px;margin-top:6px" class="' + (!x ? 'a' : x.status === 'SIAP' ? 'g' : x.status === 'GAGAL' || x.status === 'BATAL' ? 'r' : 'a') + '">#' + TUTUP_ST.id + ' ' + esc(TUTUP_ST.jenis) + ': ' + esc(x ? x.status : 'DIHANTAR') + (x && x.nota ? ' · ' + esc(x.nota) : (!x || x.status === 'BARU' || x.status === 'DIAMBIL' ? ' · menunggu PC (≤ 1 min)…' : '')) + '</div>'; }
-  return '<div class="row" style="margin-top:10px;gap:8px"><button type="button" class="tp" data-j="P" style="flex:1;border-color:var(--g);color:var(--g)"' + (U.length ? '' : ' disabled') + '>CLOSE ALL PROFIT<div style="font-size:10px">' + U.length + ' · ' + sg(sU) + '</div></button>' +
-    '<button type="button" class="tp" data-j="L" style="flex:1;border-color:var(--r);color:var(--r)"' + (R.length ? '' : ' disabled') + '>CLOSE ALL LOSS<div style="font-size:10px">' + R.length + ' · ' + sg(sR) + '</div></button></div>' + st;
+  return '<div class="row" style="margin-top:10px;gap:8px"><button type="button" class="tp" data-j="P" style="flex:1;border-color:var(--g);color:var(--g)"' + (U.length ? '' : ' disabled') + '>CLOSE ALL PROFIT<div style="font-size:10px">' + U.length + ' · ' + sgM(sU) + '</div></button>' +
+    '<button type="button" class="tp" data-j="L" style="flex:1;border-color:var(--r);color:var(--r)"' + (R.length ? '' : ' disabled') + '>CLOSE ALL LOSS<div style="font-size:10px">' + R.length + ' · ' + sgM(sR) + '</div></button></div>' + st;
 }
 function tutupSah(j) {
   const d = D(), L = (d.posisi || []).filter(p => j === 'P' ? p.pl > 0 : p.pl < 0), tot = L.reduce((s, p) => s + p.pl, 0);
@@ -175,8 +179,8 @@ function tutupSah(j) {
   const umur = P && P.masa ? Math.round((new Date(P.masa_server || Date.now()) - new Date(P.masa)) / 1000) : null;
   $('#ov').innerHTML = '<div class="ov" id="ovbg"><div class="card" style="max-width:460px;margin-top:10vh"><b class="' + (j === 'P' ? 'g' : 'r') + '" style="letter-spacing:1px">⚠ SAHKAN: CLOSE ALL ' + (j === 'P' ? 'PROFIT' : 'LOSS') + '</b>' +
     '<div class="dim" style="font-size:11px;margin:6px 0">Akaun ' + esc((d.akaun || {}).login || '') + ' · ' + L.length + ' posisi akan DITUTUP:</div>' +
-    L.map(p => '<div class="row" style="font-size:12px"><span>#' + esc(p.tiket) + ' <b>' + esc(p.ea) + '</b> <span class="' + (p.arah === 'BUY' ? 'g' : 'r') + '">' + esc(p.arah) + '</span> ' + (p.lot != null ? p.lot.toFixed(2) : '') + '</span><b class="' + kc(p.pl) + '">' + sg(p.pl) + '</b></div>').join('') +
-    '<div class="row" style="font-weight:700;margin-top:6px"><span>JUMLAH</span><span class="' + kc(tot) + '">' + sg(tot) + '</span></div>' +
+    L.map(p => '<div class="row" style="font-size:12px"><span>#' + esc(p.tiket) + ' <b>' + esc(p.ea) + '</b> <span class="' + (p.arah === 'BUY' ? 'g' : 'r') + '">' + esc(p.arah) + '</span> ' + (p.lot != null ? p.lot.toFixed(2) : '') + '</span><b class="' + kc(p.pl) + '">' + sgM(p.pl) + '</b></div>').join('') +
+    '<div class="row" style="font-weight:700;margin-top:6px"><span>JUMLAH</span><span class="' + kc(tot) + '">' + sgM(tot) + '</span></div>' +
     '<div class="a" style="font-size:11px;margin:8px 0;line-height:1.5">Data telefon ' + (umur != null ? umur + ' s' : '?') + ' lalu — harga mungkin dah berubah. PC semak semula setiap tiket: yang P/L bertukar tanda atau sudah tiada <b>dilangkau</b>. PC laksana dalam ~1 minit (app PC mesti terbuka). Arahan > 3 min dibatalkan. EA IB / Grid masuk mod HANTU selepas tutup manual.</div>' +
     '<div class="row"><button id="tidak" type="button">BATAL</button><button id="ya" type="button" class="' + (j === 'P' ? '' : 'btn-r') + '" style="' + (j === 'P' ? 'border-color:var(--g);color:var(--g)' : '') + '">YA, TUTUP ' + L.length + ' POSISI</button></div></div></div>';
   $('#tidak').onclick = tutupOv; $('#ovbg').onclick = e => { if (e.target.id === 'ovbg') tutupOv(); };
