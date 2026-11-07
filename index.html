@@ -47,7 +47,7 @@ const URL_SB = "https://zggyxogijbthjmxulavv.supabase.co", KEY = "sb_publishable
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ls = { get(k){ try { return localStorage.getItem(k); } catch(e) { return null; } }, set(k,v){ try { localStorage.setItem(k,v); } catch(e){} }, del(k){ try { localStorage.removeItem(k); } catch(e){} } };
-// v1.3 (Jack 7 Nov 2026): 2 akaun - USD (MT5 utama) / USC (MT5 kedua, Cent). D() = data akaun dipilih.
+// v1.4 (Jack 7 Nov 2026): 2 akaun - USD (MT5 utama) / USC (MT5 kedua, Cent). D() = data akaun dipilih.
 let AKN = ls.get('jp_akn') || 'u';
 const D = () => { const x = (P && P.data) || {}; return AKN === 'c' && x.kedua ? x.kedua : x; };
 let PERANAN = ls.get('jp_peranan') || 'ADMIN', SAYA = null, PRS = null, TOKEN = ls.get('jp_token'), timer = null, buka = new Set(), P = null, K = null, PR = {}, tAmbil = 0, plTab = null, ralatP = null;
@@ -101,8 +101,10 @@ function akaunHtml() {
 }
 // ---------- 2. P/L AKAUN (popup 5 tab) ----------
 const TAB = [['h', 'HARI INI'], ['s', 'SEMALAM'], ['m', 'MINGGU INI'], ['ml', 'MINGGU LALU'], ['b', 'BULAN INI']];
-function plPanel(tab) {
-  plTab = tab; const d = D(), L = (d.trade || {})[tab] || [], multi = ['m', 'ml', 'b'].includes(tab);
+let plEA = null;   // v1.5 (Jack 7 Nov): null = semua EA (kad AKAUN) · nama EA = laporan EA itu (tekan kad EA)
+function plPanel(tab, ea) {
+  if (ea !== undefined) plEA = ea;
+  plTab = tab; const d = D(), L = ((d.trade || {})[tab] || []).filter(r => !plEA || r[3] === plEA), multi = ['m', 'ml', 'b'].includes(tab);
   const lbl = d.label || {}, mk = (d.akaun || {}).mula_kira, sub = { h: (d.akaun || {}).hari || '', s: lbl.s || '', m: 'mula ' + (lbl.m || 'Isnin'), ml: lbl.ml || '', b: lbl.b || '' }[tab] + (mk ? ' · mula kira ' + mk : '');
   let rows = '', cur = null, acc = null; const hari = [];
   const tutupHari = () => { if (acc) { rows += '<div class="sub row"><span class="dim">jumlah ' + esc(cur) + '</span><span><span class="' + kc(acc.pips) + '">' + (acc.pips > 0 ? '+' : '') + acc.pips.toFixed(1) + 'p</span> &nbsp;<b class="' + kc(acc.pl) + '">' + sg(acc.pl) + '</b></span></div>'; hari.push(acc); } };
@@ -116,8 +118,8 @@ function plPanel(tab) {
   tutupHari();
   if (!L.length) rows = '<div class="dim" style="padding:10px 0">Tiada trade tutup.</div>';
   const M = L.filter(r => r[9] > 0).length, Kk = L.filter(r => r[9] < 0).length, pj = L.reduce((s, r) => s + (r[8] || 0), 0);
-  const tot = (d.jumlah || {})[tab] != null ? d.jumlah[tab] : L.reduce((s, r) => s + (r[9] || 0), 0), baki = (d.baki || {})[tab] || 0;
-  $('#ov').innerHTML = '<div class="ov" id="ovbg"><div class="card"><div class="row"><b class="c" style="letter-spacing:2px">P/L AKAUN · ' + esc(TAB.find(t => t[0] === tab)[1]) + '</b><button id="ovx" type="button" aria-label="Tutup">✕</button></div>' +
+  const tot = !plEA && (d.jumlah || {})[tab] != null ? d.jumlah[tab] : L.reduce((s, r) => s + (r[9] || 0), 0), baki = plEA ? 0 : (d.baki || {})[tab] || 0;
+  $('#ov').innerHTML = '<div class="ov" id="ovbg"><div class="card"><div class="row"><b class="c" style="letter-spacing:2px">' + (plEA ? 'EA ' + esc(plEA) : 'P/L AKAUN') + ' · ' + esc(TAB.find(t => t[0] === tab)[1]) + '</b><button id="ovx" type="button" aria-label="Tutup">✕</button></div>' +
     '<div class="tabs">' + TAB.map(([k, t]) => '<button type="button" data-t="' + k + '" class="' + (k === tab ? 'on' : '') + '">' + t + '</button>').join('') + '</div>' +
     '<div class="dim" style="font-size:11px;margin-bottom:6px">' + esc(sub) + '</div>' + rows +
     '<div class="row" style="margin-top:10px;font-weight:700"><span>JUMLAH · ' + L.length + ' trade · ' + M + 'M/' + Kk + 'K' + (L.length ? ' · WR ' + Math.round(M / L.length * 100) + '%' : '') + ' · ' + (pj > 0 ? '+' : '') + pj.toFixed(1) + 'p' +
@@ -126,7 +128,7 @@ function plPanel(tab) {
   $('#ovx').onclick = tutupOv; $('#ovbg').onclick = e => { if (e.target.id === 'ovbg') tutupOv(); };
   document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => plPanel(b.dataset.t));
 }
-function tutupOv() { $('#ov').innerHTML = ''; plTab = null; }
+function tutupOv() { $('#ov').innerHTML = ''; plTab = null; plEA = null; }
 // ---------- 3. EXPERT ADVISORS ----------
 function eaHtml() {
   const d = D(), E = (d.ea || []).filter(e => !e.off || e.posisi > 0);   // v1.3: EA OFF disorok (kekal selagi ada posisi)
@@ -139,11 +141,11 @@ function eaHtml() {
       : e.st === 'WAIT' ? '<span class="g" style="font-weight:700">○ WAITING SETUP</span>' + (e.why ? '<span class="dim"> · ' + esc(e.why) + '</span>' : '')
       : e.st === 'END' ? '<span class="dd">■ END' + (e.why ? ' · ' + esc(e.why) : '') + '</span>' : '<span class="dd">○ tiada posisi</span>';
     const jb = e.magic === 202610 && d.jbo ? (d.jbo.auto === false ? '<span class="r" style="font-weight:700">⚠ AUTO OFF</span>' : d.jbo.auto ? '<span class="g">AUTO ON · lot ' + (d.jbo.lot != null ? (+d.jbo.lot).toFixed(2) : '?') + '</span>' : '') : '';
-    return '<div class="ea"><span class="tag" style="border-color:' + sc + ';color:' + sc + '">' + esc(e.nama) + '</span><span class="dd" style="font-size:10px">' + esc(e.ver || '?') + ' · ' + esc(e.tf || '?') + ' · #' + e.magic + '</span>' +
+    return '<div class="ea" data-ea="' + esc(e.nama) + '" role="button" tabindex="0" style="cursor:pointer"><span class="tag" style="border-color:' + sc + ';color:' + sc + '">' + esc(e.nama) + '</span><span class="dd" style="font-size:10px">' + esc(e.ver || '?') + ' · ' + esc(e.tf || '?') + ' · #' + e.magic + '</span>' +
       '<div class="row"><span class="dim">P/L</span><span class="' + kc(e.pl) + '">' + sg(e.pl) + '</span></div>' + (e.tutup ? '<div class="row dd" style="font-size:10px;justify-content:flex-end">' + sp(e.pips) + '</div>' : '') +
       '<div class="row"><span class="dim">TUTUP</span><span>' + (e.tutup ?? 0) + '</span></div>' +
       (e.used != null ? '<div class="row"><span class="dim">SLOT</span><span class="' + (e.mx == null ? 'dim' : e.baki > 0 ? 'g' : 'r') + '">' + (e.mx == null ? e.used + ' · tiada had' : e.used + '/' + e.mx + ' · ' + (e.baki > 0 ? 'baki ' + e.baki : 'PENUH')) + '</span></div>' : '') +
-      (jb ? '<div style="font-size:11px">' + jb + '</div>' : '') + (e.off ? '<div class="r" style="font-size:11px;font-weight:700">⏸ OFF · tiada entry baru</div>' : '') + '<div style="font-size:11px">' + st + '</div></div>';
+      '<div class="c" style="font-size:10px;text-align:right">tekan: laporan ▸</div>' + (jb ? '<div style="font-size:11px">' + jb + '</div>' : '') + (e.off ? '<div class="r" style="font-size:11px;font-weight:700">⏸ OFF · tiada entry baru</div>' : '') + '<div style="font-size:11px">' + st + '</div></div>';
   }).join('') + '</div>';
 }
 // ---------- 4. POSISI TERBUKA ----------
@@ -219,7 +221,8 @@ function lukis() {
   if (AKN === 'c' && !((P && P.data) || {}).kedua) AKN = 'u';
   $('#app').innerHTML = aknHtml() + akaunHtml() + eaHtml() + posHtml() + (adm ? kesHtml() : pcSayaHtml()) + '<div class="foot">Pantau sahaja · data PC setiap 60 s' + (adm ? ' · client setiap 5 min' : '') + ' · auto muat ' + SEGAR_S + ' s</div>';
   document.querySelectorAll('[data-akn]').forEach(b => b.onclick = () => { AKN = b.dataset.akn; ls.set('jp_akn', AKN); lukis(); });
-  const a = $('#akaun'); if (a) { a.onclick = () => plPanel('h'); a.onkeydown = e => { if (e.key === 'Enter') plPanel('h'); }; }
+  document.querySelectorAll('[data-ea]').forEach(el => { const f = () => plPanel('h', el.dataset.ea); el.onclick = f; el.onkeydown = e => { if (e.key === 'Enter') f(); }; });   // v1.5
+  const a = $('#akaun'); if (a) { a.onclick = () => plPanel('h', null); a.onkeydown = e => { if (e.key === 'Enter') plPanel('h'); }; }
   document.querySelectorAll('.k').forEach(el => { const t = () => { const i = el.dataset.i; buka.has(i) ? buka.delete(i) : buka.add(i); lukis(); }; el.onclick = t; el.onkeydown = e => { if (e.key === 'Enter') t(); }; });
   document.querySelectorAll('.pc').forEach(b => b.onclick = () => {
     const pk = !!b.dataset.p;
